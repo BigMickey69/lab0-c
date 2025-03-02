@@ -199,7 +199,75 @@ void q_reverseK(struct list_head *head, int k)
 }
 
 /* Sort elements of queue in ascending/descending order */
-void q_sort(struct list_head *head, bool descend) {}
+/* Iterating through nodes and create an array, then quicksort
+ * said array is a faster way to sort, but it takes more memory
+ * and is harder to implement. Bubblesort keeps things simple */
+
+/* EDIT: I decided to just use quicksort*/
+
+short int cmp_ascend(const void *a, const void *b)
+{
+    struct list_head *A = *(struct list_head **) a;
+    struct list_head *B = *(struct list_head **) b;
+
+    const element_t *nodeA = list_entry(A, element_t, list);
+    const element_t *nodeB = list_entry(B, element_t, list);
+
+    return nodeA->value - nodeB->value;
+}
+short int cmp_descend(const void *a, const void *b)
+{
+    struct list_head *A = *(struct list_head **) a;
+    struct list_head *B = *(struct list_head **) b;
+
+    const element_t *nodeA = list_entry(A, element_t, list);
+    const element_t *nodeB = list_entry(B, element_t, list);
+
+    return nodeB->value - nodeA->value;
+}
+
+void q_sort(struct list_head *head, bool descend)
+{
+    if (list_empty(head))
+        return;
+
+    struct list_head *p = head->next;
+
+    short int a_max = 5;
+    short int a_size = 0;
+    struct list_head **arr = malloc(sizeof(struct list_head *) * a_max);
+
+    while (p != head) {
+        arr[a_size++] = p;
+        if (a_size == a_max) {
+            a_max *= 2;
+            struct list_head **new =
+                realloc(arr, sizeof(struct list_head *) * a_max);
+            if (!new) {
+                free(arr);
+                arr = NULL;
+                return;
+            }
+            arr = new;
+        }
+        p = p->next;
+    }
+    if (descend)
+        qsort(arr, a_size, sizeof(struct list_head *), cmp_descend);
+    else
+        qsort(arr, a_size, sizeof(struct list_head *), cmp_ascend);
+
+    arr[0]->prev = head;
+    head->next = arr[0];
+    for (int i = 0; i < a_size - 1; i++) {
+        arr[i]->next = arr[i + 1];
+        arr[i]->next->prev = arr[i];
+    }
+    arr[a_size - 1]->next = head;
+    head->prev = arr[a_size - 1];
+
+    free(arr);
+}
 
 /* Remove every node which has a node with a strictly less value anywhere to
  * the right side of it */
