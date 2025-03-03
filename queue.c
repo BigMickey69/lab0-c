@@ -205,7 +205,7 @@ void q_reverseK(struct list_head *head, int k)
 
 /* EDIT: I decided to just use quicksort*/
 
-short int cmp_ascend(const void *a, const void *b)
+int compare_ascend(const void *a, const void *b)
 {
     struct list_head *A = *(struct list_head **) a;
     struct list_head *B = *(struct list_head **) b;
@@ -215,7 +215,7 @@ short int cmp_ascend(const void *a, const void *b)
 
     return nodeA->value - nodeB->value;
 }
-short int cmp_descend(const void *a, const void *b)
+int compare_descend(const void *a, const void *b)
 {
     struct list_head *A = *(struct list_head **) a;
     struct list_head *B = *(struct list_head **) b;
@@ -253,9 +253,9 @@ void q_sort(struct list_head *head, bool descend)
         p = p->next;
     }
     if (descend)
-        qsort(arr, a_size, sizeof(struct list_head *), cmp_descend);
+        qsort(arr, a_size, sizeof(struct list_head *), compare_descend);
     else
-        qsort(arr, a_size, sizeof(struct list_head *), cmp_ascend);
+        qsort(arr, a_size, sizeof(struct list_head *), compare_ascend);
 
     arr[0]->prev = head;
     head->next = arr[0];
