@@ -269,6 +269,7 @@ void q_sort(struct list_head *head, bool descend)
     free(arr);
 }
 
+#define LONGEST_STRING_LENGTH 256
 /* Remove every node which has a node with a strictly less value anywhere to
  * the right side of it */
 int q_ascend(struct list_head *head)
@@ -281,7 +282,34 @@ int q_ascend(struct list_head *head)
  * the right side of it */
 int q_descend(struct list_head *head)
 {
-    // https://leetcode.com/problems/remove-nodes-from-linked-list/
+    if (list_empty(head))
+        return -1;
+
+    struct list_head **pp = &head->prev;
+    struct list_head *prev = head;
+
+    const element_t *last_e = list_entry(*pp, element_t, list);
+    char *max = strdup(last_e->value);
+
+    while (*pp != head) {
+        const element_t *e = list_entry(*pp, element_t, list);
+
+        if (strcmp(max, e->value) < 0) {
+            free(max);
+            max = strdup(e->value);
+
+            (*pp)->next = prev;
+            prev->prev = *pp;
+            prev = *pp;
+            *pp = (*pp)->prev;
+        } else {
+            struct list_head *temp = (*pp)->prev;
+            list_del(*pp);
+            *pp = temp;
+        }
+    }
+    *pp = prev;
+    free(max);
     return 0;
 }
 
