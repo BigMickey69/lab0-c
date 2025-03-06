@@ -350,8 +350,8 @@ void merge_lists(struct list_head *h1, struct list_head *h2, bool descend)
     INIT_LIST_HEAD(&merged);
 
     while (!list_empty(h1) && !list_empty(h2)) {
-        const element_t *e1 = list_entry(h1->next, element_t, list);
-        const element_t *e2 = list_entry(h2->next, element_t, list);
+        element_t *e1 = list_entry(h1->next, element_t, list);
+        element_t *e2 = list_entry(h2->next, element_t, list);
         if (descend ? strcmp(e2->value, e1->value) > 0
                     : strcmp(e2->value, e1->value) <= 0) {
             list_move_tail(&e1->list, &merged);
