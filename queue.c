@@ -14,6 +14,8 @@
 struct list_head *q_new()
 {
     struct list_head *h = malloc(sizeof(struct list_head));
+    if (!h)
+        return NULL;
     INIT_LIST_HEAD(h);
     return h;
 }
@@ -21,8 +23,10 @@ struct list_head *q_new()
 /* Free all storage used by queue */
 void q_free(struct list_head *head)
 {
-    if (list_empty(head))
+    if (list_empty(head)) {
+        free(head);
         return;
+    }
 
     struct list_head *pos, *tmp;
 
@@ -79,10 +83,10 @@ bool q_insert_tail(struct list_head *head, char *s)
 
     struct list_head *h = &e->list;
 
-    h->next = head->next;
-    head->next->prev = h;
-    head->next = h;
-    h->prev = head;
+    h->prev = head->prev;
+    head->next = head;
+    head->prev->next = h;
+    h->prev = h;
 
     return true;
 }
@@ -150,6 +154,8 @@ bool q_delete_mid(struct list_head *head)
     }
 
     list_del(slow);
+    element_t *e = container_of(slow, element_t, list);
+    free(e);
     return true;
 }
 
@@ -289,7 +295,7 @@ int compare_ascend(const void *a, const void *b)
     const element_t *nodeA = list_entry(A, element_t, list);
     const element_t *nodeB = list_entry(B, element_t, list);
 
-    return nodeA->value - nodeB->value;
+    return strcmp(nodeA->value, nodeB->value);
 }
 int compare_descend(const void *a, const void *b)
 {
@@ -299,7 +305,7 @@ int compare_descend(const void *a, const void *b)
     const element_t *nodeA = list_entry(A, element_t, list);
     const element_t *nodeB = list_entry(B, element_t, list);
 
-    return nodeB->value - nodeA->value;
+    return strcmp(nodeB->value, nodeA->value);
 }
 
 void q_sort(struct list_head *head, bool descend)
