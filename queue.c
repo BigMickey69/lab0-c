@@ -28,11 +28,11 @@ void q_free(struct list_head *head)
 
     list_for_each_safe (pos, tmp, head) {
         element_t *entry = list_entry(pos, element_t, list);
-        kfree(entry->value);
+        free(entry->value);
         list_del(pos);
-        kfree(entry);
+        free(entry);
     }
-    kfree(head);
+    free(head);
 }
 
 /* Insert an element at head of queue */
