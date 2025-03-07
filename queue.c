@@ -84,9 +84,9 @@ bool q_insert_tail(struct list_head *head, char *s)
     struct list_head *h = &e->list;
 
     h->prev = head->prev;
-    head->next = head;
+    h->next = head;
     head->prev->next = h;
-    h->prev = h;
+    head->prev = h;
 
     return true;
 }
