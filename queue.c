@@ -309,48 +309,39 @@ int compare_descend(const void *a, const void *b)
     return strcmp(nodeB->value, nodeA->value);
 }
 
+static bool need_swap(struct list_head *a, struct list_head *b, bool descend)
+{
+    const element_t *A = list_entry(a, element_t, list);
+    const element_t *B = list_entry(b, element_t, list);
+    return descend ? strcmp(A->value, B->value) : strcmp(B->value, A->value);
+}
+
 void q_sort(struct list_head *head, bool descend)
 {
-    if (list_empty(head))
+    if (!head || list_empty(head) || list_is_singular(head))
         return;
 
-    struct list_head *p = head->next;
+    bool swapped;
+    const struct list_head *last = NULL;
 
-    short int a_max = 5;
-    short int a_size = 0;
-    struct list_head **arr = malloc(sizeof(struct list_head *) * a_max);
+    do {
+        swapped = false;
+        struct list_head *ptr = head->next;
 
-    while (p != head) {
-        arr[a_size++] = p;
-        if (a_size == a_max) {
-            a_max *= 2;
-            struct list_head **new =
-                realloc(arr, sizeof(struct list_head *) * a_max);
-            if (!new) {
-                free(arr);
-                arr = NULL;
-                return;
+        while (ptr->next != head && ptr->next != last) {
+            struct list_head *next = ptr->next;
+            if (need_swap(ptr, next, descend)) {
+                list_del_init(next);
+                list_add_tail(next, ptr);
+                swapped = true;
+            } else {
+                ptr = ptr->next;
             }
-            arr = new;
         }
-        p = p->next;
-    }
-    if (descend)
-        qsort(arr, a_size, sizeof(struct list_head *), compare_descend);
-    else
-        qsort(arr, a_size, sizeof(struct list_head *), compare_ascend);
-
-    arr[0]->prev = head;
-    head->next = arr[0];
-    for (int i = 0; i < a_size - 1; i++) {
-        arr[i]->next = arr[i + 1];
-        arr[i]->next->prev = arr[i];
-    }
-    arr[a_size - 1]->next = head;
-    head->prev = arr[a_size - 1];
-
-    free(arr);
+        last = ptr;  // One more element is bubbled into correct position
+    } while (swapped);
 }
+
 
 #define LONGEST_STRING_LENGTH 256
 /* Remove every node which has a node with a strictly less value anywhere to
