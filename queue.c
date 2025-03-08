@@ -155,6 +155,7 @@ bool q_delete_mid(struct list_head *head)
 
     list_del(slow);
     element_t *e = container_of(slow, element_t, list);
+    free(e->value);
     free(e);
     return true;
 }
