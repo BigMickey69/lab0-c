@@ -313,7 +313,7 @@ static bool need_swap(struct list_head *a, struct list_head *b, bool descend)
 {
     const element_t *A = list_entry(a, element_t, list);
     const element_t *B = list_entry(b, element_t, list);
-    return descend ? strcmp(A->value, B->value) : strcmp(B->value, A->value);
+    return descend ? strcmp(B->value, A->value) : strcmp(A->value, B->value);
 }
 
 void q_sort(struct list_head *head, bool descend)
