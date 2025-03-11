@@ -167,35 +167,35 @@ bool q_delete_dup(struct list_head *head)
     if (!head || list_empty(head))
         return false;
 
-    struct list_head **pp = &head->next;
-    struct list_head *fast;
+    struct list_head *cur = head->next, *next, *n;
 
-    while (*pp != head) {
-        const element_t *n1 = list_entry(*pp, element_t, list);
-        fast = (*pp)->next;
+    while (cur != head) {
+        bool deleted = false;
+        next = n = cur->next;
 
-        while (fast != head) {
-            const element_t *n2 = list_entry(fast, element_t, list);
+        while (n != head) {
+            struct list_head *nexter = n->next;
+            const element_t *e_cur = list_entry(cur, element_t, list);
+            element_t *e = list_entry(n, element_t, list);
 
-            if (strcmp(n1->value, n2->value) == 0) {
-                // Save reference since we're freeing the dupe
-                struct list_head *next_fast = fast->next;
-                list_del(fast);
-                fast = next_fast;
-                continue;
+            if (strcmp(e_cur->value, e->value) == 0) {
+                deleted = true;
+                list_del(n);
+                q_release_element(e);
             }
-
-            fast = fast->next;
+            n = nexter;
         }
 
-        if ((*pp)->next == fast)
-            pp = &(*pp)->next;
-        else
-            *pp = fast;
+        if (deleted) {
+            next = cur->next;
+            list_del(cur);
+            q_release_element(list_entry(cur, element_t, list));
+        }
+        cur = next;
     }
-
     return true;
 }
+
 
 /* Swap every two adjacent nodes */
 // https://leetcode.com/problems/swap-nodes-in-pairs/
