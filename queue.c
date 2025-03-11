@@ -61,7 +61,7 @@ bool q_insert_head(struct list_head *head, char *s)
     head->next->prev = h;
     head->next = h;
     h->prev = head;
-
+    q_insert_head(head, s);
     return true;
 }
 
@@ -427,8 +427,8 @@ void merge_lists(struct list_head *h1, struct list_head *h2, bool descend)
     while (!list_empty(h1) && !list_empty(h2)) {
         element_t *e1 = list_entry(h1->next, element_t, list);
         element_t *e2 = list_entry(h2->next, element_t, list);
-        if (descend ? strcmp(e2->value, e1->value) >= 0
-                    : strcmp(e2->value, e1->value) <= 0) {
+        if (descend ? strcmp(e1->value, e2->value) >= 0
+                    : strcmp(e1->value, e2->value) <= 0) {
             list_move_tail(&e1->list, &merged);
         } else {
             list_move_tail(&e2->list, &merged);
@@ -452,23 +452,18 @@ void merge_lists(struct list_head *h1, struct list_head *h2, bool descend)
 int q_merge(struct list_head *head, bool descend)
 {
     if (list_empty(head))
-        return -1;
+        return 0;
 
-    struct list_head *starter = head->next;
-    while (!list_is_singular(head)) {
-        if (starter == head)
-            starter = starter->next;
+    queue_contex_t *first = list_entry(head->next, queue_contex_t, chain);
 
-        queue_contex_t *first, *second;
+    for (struct list_head *cur = head->next->next; cur != head;
+         cur = cur->next) {
 
-        first = list_entry(starter, queue_contex_t, chain);
-        second = list_entry(first->chain.next, queue_contex_t, chain);
-        starter = second->chain.next;
+        queue_contex_t *second = list_entry(cur, queue_contex_t, chain);
 
-        merge_lists(second->q, first->q, descend);
-
-        list_del(&first->chain);
+        first->size += second->size;
+        second->size = 0;
+        merge_lists(first->q, second->q, descend);
     }
-    return 0;
+    return first->size;
 }
-
