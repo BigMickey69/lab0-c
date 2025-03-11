@@ -61,7 +61,7 @@ bool q_insert_head(struct list_head *head, char *s)
     head->next->prev = h;
     head->next = h;
     h->prev = head;
-    q_insert_head(head, s);
+
     return true;
 }
 
