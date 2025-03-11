@@ -353,32 +353,29 @@ int q_ascend(struct list_head *head)
     if (list_empty(head))
         return -1;
 
-    struct list_head **pp = &head->prev;
-    struct list_head *prev = head;
+    if (list_is_singular(head))
+        return 1;
 
-    const element_t *last_e = list_entry(*pp, element_t, list);
-    char *max = strdup(last_e->value);
+    char *max = strdup(list_entry(head->prev, element_t, list)->value);
 
-    while (*pp != head) {
-        const element_t *e = list_entry(*pp, element_t, list);
+    short int size = 1;
+    struct list_head *cur = head->prev->prev;
+    while (cur != head) {
+        element_t *e = list_entry(cur, element_t, list);
 
         if (strcmp(max, e->value) > 0) {
+            size++;
             free(max);
             max = strdup(e->value);
-
-            (*pp)->next = prev;
-            prev->prev = *pp;
-            prev = *pp;
-            *pp = (*pp)->prev;
+            cur = cur->prev;
         } else {
-            struct list_head *temp = (*pp)->prev;
-            list_del(*pp);
-            *pp = temp;
+            struct list_head *temp = cur->prev;
+            list_del(cur);
+            q_release_element(e);
+            cur = temp;
         }
     }
-    *pp = prev;
-    free(max);
-    return 0;
+    return size;
 }
 
 /* Remove every node which has a node with a strictly greater value anywhere to
