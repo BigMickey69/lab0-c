@@ -23,6 +23,9 @@ struct list_head *q_new()
 /* Free all storage used by queue */
 void q_free(struct list_head *head)
 {
+    if (!head)
+        return;
+
     if (list_empty(head)) {
         free(head);
         return;
