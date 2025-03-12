@@ -363,6 +363,7 @@ int q_ascend(struct list_head *head)
             cur = temp;
         }
     }
+    free(max);
     return size;
 }
 
@@ -395,6 +396,7 @@ int q_descend(struct list_head *head)
             cur = temp;
         }
     }
+    free(max);
     return size;
 }
 
