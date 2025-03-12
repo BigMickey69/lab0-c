@@ -246,39 +246,27 @@ void q_reverseK(struct list_head *head, int k)
     if (k <= 1 || list_empty(head))
         return;
 
-    struct list_head **pp = &head->next;
-    struct list_head **s = malloc(sizeof(struct list_head *) * k);
-    short int s_size = 0;
+    struct list_head new;
+    INIT_LIST_HEAD(&new);
 
-    while (*pp != head) {
-        struct list_head *p = *pp;
-        for (int i = 0; i < k; i++) {
-            if (p == head)
-                break;
-            s[s_size++] = p;
-            p = p->next;
+    short counter = 0;
+    for (struct list_head *cur = head->next; !(cur == head && counter != 0);
+         cur = cur->next) {
+        counter++;
+        if (counter != k)
+            continue;
+
+        while (cur != head) {
+            struct list_head *temp = cur->prev;
+            list_move_tail(cur, &new);
+            cur = temp;
         }
-
-        if (k != s_size)
-            break;
-
-        struct list_head *temp = *pp;
-        *pp = s[--s_size];
-        (*pp)->prev = temp->prev;
-
-        if ((*pp)->prev)
-            (*pp)->prev->next = *pp;
-
-        while (s_size) {
-            (*pp)->next = s[--s_size];
-            (*pp)->next->prev = *pp;
-            pp = &(*pp)->next;
-        }
-        (*pp)->next = p;
-        p->prev = *pp;
-        pp = &(*pp)->next;
+        counter = 0;
+        cur = head;
     }
-    free(s);
+
+    list_splice_tail_init(head, &new);
+    list_splice_init(&new, head);
 }
 
 /* Sort elements of queue in ascending/descending order */
