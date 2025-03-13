@@ -279,63 +279,78 @@ void q_reverseK(struct list_head *head, int k)
 
 /* EDIT: I decided to just use quicksort*/
 
-int compare_ascend(const void *a, const void *b)
+/* EDIT 2: quicksort is almost impossible due to malloc being disabled,
+ * so the new method of choice is mergesort! */
+
+struct list_head *merge_two_list(struct list_head *left,
+                                 struct list_head *right,
+                                 bool descend)
 {
-    struct list_head *A = *(struct list_head **) a;
-    struct list_head *B = *(struct list_head **) b;
+    struct list_head head;
+    struct list_head *h = &head;
+    if (!left && !right) {
+        return NULL;
+    }
+    while (left && right) {
+        const char *l_v = list_entry(left, element_t, list)->value;
+        const char *r_v = list_entry(right, element_t, list)->value;
 
-    const element_t *nodeA = list_entry(A, element_t, list);
-    const element_t *nodeB = list_entry(B, element_t, list);
-
-    return strcmp(nodeA->value, nodeB->value);
+        if (descend ? strcmp(l_v, r_v) >= 0 : strcmp(l_v, r_v) <= 0) {
+            h->next = left;
+            left = left->next;
+            h = h->next;
+        } else {
+            h->next = right;
+            right = right->next;
+            h = h->next;
+        }
+    }
+    h->next = left ? left : right;
+    return head.next;
 }
-int compare_descend(const void *a, const void *b)
+
+
+struct list_head *merger(struct list_head *head, bool descend)
 {
-    struct list_head *A = *(struct list_head **) a;
-    struct list_head *B = *(struct list_head **) b;
+    if (!head->next) {
+        return head;
+    }
 
-    const element_t *nodeA = list_entry(A, element_t, list);
-    const element_t *nodeB = list_entry(B, element_t, list);
+    struct list_head *slow = head;
+    struct list_head *fast = head->next;
+    while (fast && fast->next) {
+        fast = fast->next->next;
+        slow = slow->next;
+    }
 
-    return strcmp(nodeB->value, nodeA->value);
-}
+    struct list_head *mid = slow->next;
+    slow->next = NULL;
 
-static bool need_swap(struct list_head *a, struct list_head *b, bool descend)
-{
-    const element_t *A = list_entry(a, element_t, list);
-    const element_t *B = list_entry(b, element_t, list);
-    return descend ? strcmp(B->value, A->value) > 0
-                   : strcmp(A->value, B->value) > 0;
+    struct list_head *left = merger(head, descend);
+    struct list_head *right = merger(mid, descend);
+
+    return merge_two_list(left, right, descend);
 }
 
 void q_sort(struct list_head *head, bool descend)
 {
-    if (!head || list_empty(head) || list_is_singular(head))
+    if (!head || list_empty(head))
         return;
 
-    bool swapped;
-    const struct list_head *last = NULL;
+    head->prev->next = NULL;
+    head->next = merger(head->next, descend);
+    struct list_head *cur;
+    struct list_head *prev_node = head;
+    for (cur = head->next; cur->next != NULL; cur = cur->next) {
+        cur->prev = prev_node;
+        prev_node = cur;
+    }
 
-    do {
-        swapped = false;
-        struct list_head *ptr = head->next;
-
-        while (ptr->next != head && ptr->next != last) {
-            struct list_head *next = ptr->next;
-            if (need_swap(ptr, next, descend)) {
-                list_del_init(next);
-                list_add_tail(next, ptr);
-                swapped = true;
-            } else {
-                ptr = ptr->next;
-            }
-        }
-        last = ptr;  // One more element is bubbled into correct position
-    } while (swapped);
+    cur->next = head;
+    head->prev = cur;
 }
 
 
-#define LONGEST_STRING_LENGTH 256
 /* Remove every node which has a node with a strictly less value anywhere to
  * the right side of it */
 // https://leetcode.com/problems/remove-nodes-from-linked-list/
