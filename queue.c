@@ -312,7 +312,7 @@ struct list_head *merge_two_list(struct list_head *left,
 
 struct list_head *merger(struct list_head *head, bool descend)
 {
-    if (!head->next) {
+    if (!head || !head->next) {
         return head;
     }
 
@@ -347,6 +347,7 @@ void q_sort(struct list_head *head, bool descend)
     }
 
     cur->next = head;
+    cur->prev = prev_node;
     head->prev = cur;
 }
 
@@ -427,13 +428,13 @@ void merge_lists(struct list_head *h1, struct list_head *h2, bool descend)
     INIT_LIST_HEAD(&merged);
 
     while (!list_empty(h1) && !list_empty(h2)) {
-        element_t *e1 = list_entry(h1->next, element_t, list);
-        element_t *e2 = list_entry(h2->next, element_t, list);
+        const element_t *e1 = list_entry(h1->next, element_t, list);
+        const element_t *e2 = list_entry(h2->next, element_t, list);
         if (descend ? strcmp(e1->value, e2->value) >= 0
                     : strcmp(e1->value, e2->value) <= 0) {
-            list_move_tail(&e1->list, &merged);
+            list_move_tail(h1->next, &merged);
         } else {
-            list_move_tail(&e2->list, &merged);
+            list_move_tail(h2->next, &merged);
         }
     }
 
