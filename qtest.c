@@ -1486,7 +1486,6 @@ void list_quicksort(struct list_head *head)
 
 
 
-
 bool do_quicksort(int argc, char *argv[])
 {
     if (argc != 1) {
@@ -1576,4 +1575,33 @@ bool do_quicksort(int argc, char *argv[])
 
     q_show(3);
     return ok && !error_check();
+}
+
+void shuffle(struct list_head *head)
+{
+    printf("Shuffling!\n");
+    int size = q_size(head);
+
+    for (int i = size; i > 0; i--) {
+        unsigned int seed =
+            (unsigned int) (time(NULL) ^ (((uintptr_t) &shuffle >> i) + i));
+
+        srand(seed);
+        int choice = (rand() % i) + 1;
+        // skip swap if the same
+        if (choice == i)
+            continue;
+
+        struct list_head *n1 = head;
+        for (int k = 0; k != i; k++, n1 = n1->next) {
+            // do nothing
+        }
+
+        struct list_head *n2 = head;
+        for (int k = 0; k != choice; k++, n2 = n2->next) {
+            // do nothing
+        }
+
+        swap(n1, n2);
+    }
 }
