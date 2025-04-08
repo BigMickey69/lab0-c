@@ -1057,6 +1057,7 @@ static bool do_next(int argc, char *argv[])
 }
 
 bool do_quicksort(int argc, char *argv[]);
+bool do_shuffle(int argc, char *argv[]);
 
 static void console_init()
 {
@@ -1100,6 +1101,7 @@ static void console_init()
                 "[K]");
     ADD_COMMAND(quicksort,
                 "**Assignment from N02** Sort queue in ascending order", "");
+    ADD_COMMAND(shuffle, "**Assignment from N01** Shuffle around list :D", "");
     add_param("length", &string_length, "Maximum length of displayed string",
               NULL);
     add_param("malloc", &fail_probability, "Malloc failure probability percent",
@@ -1577,31 +1579,96 @@ bool do_quicksort(int argc, char *argv[])
     return ok && !error_check();
 }
 
+
+void swap_lh(struct list_head *n1,
+             struct list_head *p1,
+             struct list_head *n2,
+             struct list_head *p2)
+{
+    p1->next = n2;
+    p2->next = n1;
+
+    struct list_head *temp = n1->next;
+    n1->next = n2->next;
+    n2->next = temp;
+}
+
 void shuffle(struct list_head *head)
 {
     printf("Shuffling!\n");
     int size = q_size(head);
 
-    for (int i = size; i > 0; i--) {
-        unsigned int seed =
-            (unsigned int) (time(NULL) ^ (((uintptr_t) &shuffle >> i) + i));
+    // break doubly linked list
+    head->prev->next = NULL;
 
-        srand(seed);
+
+    /* Try to get a random-ish seed,
+     * with entropy from all different sources.
+     */
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    uint32_t val = ts.tv_sec ^ ts.tv_sec << 16;
+    val = val ^ ts.tv_nsec ^ ts.tv_nsec << 16;
+    unsigned int seed =
+        (unsigned int) (time(NULL) ^ ((uintptr_t) &shuffle)) ^ val;
+    srand(seed);
+
+
+
+    for (int i = size; i > 0; i--) {
         int choice = (rand() % i) + 1;
+
         // skip swap if the same
         if (choice == i)
             continue;
 
-        struct list_head *n1 = head;
-        for (int k = 0; k != i; k++, n1 = n1->next) {
+        struct list_head *p1 = head;
+        struct list_head *n1 = head->next;
+        for (int k = 1; k != i; k++, n1 = n1->next, p1 = p1->next) {
             // do nothing
         }
 
-        struct list_head *n2 = head;
-        for (int k = 0; k != choice; k++, n2 = n2->next) {
+        struct list_head *p2 = head;
+        struct list_head *n2 = head->next;
+        for (int k = 1; k != choice; k++, n2 = n2->next, p2 = p2->next) {
             // do nothing
         }
-
-        swap(n1, n2);
+        swap_lh(n1, p1, n2, p2);
     }
+
+    // restore doubly linked list
+    struct list_head *temp = head;
+    struct list_head *cur;
+    for (cur = head->next; cur != NULL; cur = cur->next, temp = temp->next) {
+        cur->prev = temp;
+    }
+    temp->next = head;
+    head->prev = temp;
 }
+
+
+
+/* The do_ function should be relatively simple and function similiar
+ *  to do_reverse, so it was taken for reference
+ */
+bool do_shuffle(int argc, char *argv[])
+{
+    if (argc != 1) {
+        report(1, "%s takes no arguments", argv[0]);
+        return false;
+    }
+
+    if (!current || !current->q)
+        report(3, "Warning: Calling shuffle on null queue");
+    error_check();
+
+    set_noallocate_mode(true);
+    if (current && exception_setup(true))
+        shuffle(current->q);
+    exception_cancel();
+
+    set_noallocate_mode(false);
+    q_show(3);
+    return !error_check();
+}
+

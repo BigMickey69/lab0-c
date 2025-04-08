@@ -27,3 +27,4 @@ GRTAGS
 GSYMS
 GTAGS
 traces/tester.cmd
+traces/shuffle.cmd
